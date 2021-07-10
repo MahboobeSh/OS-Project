@@ -533,10 +533,3 @@ procdump(void)
   }
 }
 
-
-int
-helloWorld(void){
-
-  cprintf("\n ****hello world from system call ***\n");
-  return 22;
-}

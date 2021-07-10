@@ -93,5 +93,8 @@ sys_uptime(void)
 int
 sys_helloWorld(void){
   
-  return helloWorld();
+
+  cprintf("\n ****hello world from system call ***\n");
+  return 22;
+
 }
