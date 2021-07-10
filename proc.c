@@ -532,3 +532,11 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+
+int
+helloWorld(void){
+
+  cprintf("\n ****hello world from system call ***\n");
+  return 22;
+}
