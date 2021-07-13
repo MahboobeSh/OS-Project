@@ -98,3 +98,15 @@ sys_helloWorld(void){
   return 22;
 
 }
+
+
+int
+sys_clone(void){
+  void *stack;
+  if(argptr(0, (void*)&stack, sizeof(void*)) < 0)
+    return -1;
+
+  
+  return clone(stack);
+
+}
