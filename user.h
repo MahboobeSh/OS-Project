@@ -25,6 +25,9 @@ int sleep(int);
 int uptime(void);
 int helloWorld(void);
 
+int clone(void(*func)(void*), void* arg, void* stack);
+int join(void** stack);
+
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
@@ -38,3 +41,6 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+int thread_create(void(*func)(void*), void* arg);
+int thread_join(void);
