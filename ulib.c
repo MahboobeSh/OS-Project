@@ -4,6 +4,11 @@
 #include "user.h"
 #include "x86.h"
 
+
+
+
+#define PGSIZE 4096
+
 char*
 strcpy(char *s, const char *t)
 {
@@ -104,3 +109,29 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+
+/*
+int thread_create(void (*func)(void*), void* arg)
+{
+
+  void* freeptr = umalloc(4096*2);
+  void* stack;
+  if(freeptr == 0)
+    return -1;
+  if((uint)freeptr % PGSIZE == 0)
+    stack = freeptr;
+  else
+    stack = freeptr + (PGSIZE - ((uint)freeptr % PGSIZE));
+ for(int i = 0; i < MAX_PROC; i++){
+    if(ptrs[i].busy == 0){
+      ptrs[i].ptr = freeptr;
+      ptrs[i].stack = stack;
+      ptrs[i].busy = 1;
+      break;
+    }
+  }
+  int ret = clone(func, arg, stack);
+  return ret;
+}
+
+*/

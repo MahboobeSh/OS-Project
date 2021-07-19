@@ -102,6 +102,8 @@ found:
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
+  p->isthread = 0;  //initialiing all process to zero
+
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
@@ -255,9 +257,20 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
+
+      //identifying thread process and chileren
+      if (p->isthread == 1) {
+        
+         kfree(p->kstack);
+         p->kstack = 0;
+         p->state = UNUSED;
+      }
+      else {
+      
       p->parent = initproc;
       if(p->state == ZOMBIE)
-        wakeup1(initproc);
+        wakeup1(initproc);   
+      }
     }
   }
 
@@ -480,12 +493,23 @@ int
 kill(int pid)
 {
   struct proc *p;
+  struct proc *temp;
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
+
+      //finding  threads 
+      for(temp = ptable.proc; temp < &ptable.proc[NPROC]; temp++){
+          if ((temp->parent == p) && (temp->isthread == 1)){
+            temp->killed = 1;
+            if (temp->state == SLEEPING)
+                temp->state = RUNNABLE;
+          }
+      }
       // Wake process from sleep if necessary.
+
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
       release(&ptable.lock);
@@ -534,31 +558,77 @@ procdump(void)
 }
 
 int
-clone(void* stack)
+clone(void(*func)(void*), void*arg, void* stack)
 {
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
+  
 
   // Allocate process.
   if((np = allocproc()) == 0){
+    
     return -1;
+  }
+  if((uint)stack % PGSIZE !=0 ){
+    
+    stack = stack + (PGSIZE - ((uint)stack % PGSIZE));
+    
+  }
+  if((uint)stack % PGSIZE !=0 ){
+    
+    return -1;
+    
   }
 
   // Copy process state from proc.
+  /*
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+  */
+
+  //in clone page directory must be the same
+  
+  np->tstack = stack;
+  
+  np->pgdir = curproc->pgdir;
+ 
   np->sz = curproc->sz;
+  
   np->parent = curproc;
+  
   *np->tf = *curproc->tf;
+  
+  np->isthread = 1;   //adding for identifiying thread process
+  
 
-  // Clear %eax so that fork returns 0 in the child.
+   int *myarg;
+   int *myret;
+  // Set stack pointer register
+  
+   np->tf->eip = (int)func;
+ 
+   myret = stack + PGSIZE - 2 * sizeof(int *);
+  
+   *myret = 0xFFFFFFFF;
+  
+   myarg = stack + PGSIZE - sizeof(int *);
+  
+   *myarg = (int)arg;
+    
+   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
+   
+   np->tf->ebp = np->tf->esp;
+  
+
+  // Clear %eax so that clone returns 0 in the child.
   np->tf->eax = 0;
-
+ 
+  
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
@@ -569,7 +639,6 @@ clone(void* stack)
   pid = np->pid;
 
   acquire(&ptable.lock);
-
   np->state = RUNNABLE;
 
   release(&ptable.lock);

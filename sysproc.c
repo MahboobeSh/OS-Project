@@ -103,10 +103,16 @@ sys_helloWorld(void){
 int
 sys_clone(void){
   void *stack;
-  if(argptr(0, (void*)&stack, sizeof(void*)) < 0)
+  void *arg;
+  void (*func)(void*);
+  if(argptr(1, (void*)&func, sizeof(void*)) < 0)
+    return -1;
+  if(argptr(0, (void*)&arg, sizeof(void*)) < 0)
+    return -1;
+  if(argptr(2, (void*)&stack, sizeof(void*)) < 0)
     return -1;
 
   
-  return clone(stack);
+  return clone(func, arg, stack);
 
 }
