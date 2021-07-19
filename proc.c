@@ -7,6 +7,8 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#define NULL ((void*)0)
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -101,7 +103,9 @@ found:
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
-
+  //initialing isthread and tstack;
+  p->tstack = NULL;
+  p->isthread = 0;
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
@@ -258,6 +262,12 @@ exit(void)
       p->parent = initproc;
       if(p->state == ZOMBIE)
         wakeup1(initproc);
+      //for handling thread process
+      if (p->isthread == 1){
+        p->state = UNUSED;
+        kfree(p->kstack);
+        p->kstack = 0;
+      }
     }
   }
 
@@ -281,7 +291,7 @@ wait(void)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
+      if(p->parent != curproc || p->isthread == 1)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -539,22 +549,36 @@ clone(void(*func)(void*),void* arg, void* stack)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
+  uint* stack1 = stack + PGSIZE;
 
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
 
-  // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
-    kfree(np->kstack);
-    np->kstack = 0;
-    np->state = UNUSED;
-    return -1;
-  }
+
+  np->tstack = stack;   
+  np->isthread =1;
+  np->pgdir = curproc->pgdir;
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+
+
+
+
+	*(stack1 - 1) = (uint) arg;
+	*(stack1 - 2) = 0xffffffff;
+  np->tf->esp = (uint)(stack1 - 2);
+
+  np->tf->ebp = np->tf->esp;
+  np->tf->eip = (uint)func;
+
+
+
+
+
+
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -590,7 +614,8 @@ join(void** temp_stack)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
+      //we only handling threads here
+      if(p->parent != curproc || p->isthread != 1)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -598,7 +623,9 @@ join(void** temp_stack)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        //in join we must kepp pgdir
+        //freevm(p->pgdir);
+        *temp_stack = p->tstack;
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
