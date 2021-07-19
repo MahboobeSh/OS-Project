@@ -8,7 +8,7 @@
 
 int thread_create(void(*func)(void*), void* arg){
 
-	void *stack = (void*)malloc(4096*2);
+	char *stack = (void*)malloc(PGSIZE);
 
 	int pid = clone(func, arg, stack);
 	

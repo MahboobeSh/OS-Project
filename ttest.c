@@ -11,6 +11,7 @@ int arr[] = {1, 2, 3, 4, 5, 6}; // 1 + 2 + 3 + 4 + 5 + 6 = 21
 void sum(void *x){
     arrsum += *((int *)x);
     //printf(1,"\n i am a thread \n");
+    exit();
 }
 
 int main(){
