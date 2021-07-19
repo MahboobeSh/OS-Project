@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
 #define NULL ((void*)0)
 
 struct {
@@ -546,10 +547,11 @@ procdump(void)
 int
 clone(void(*func)(void*),void* arg, void* stack)
 {
+  
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
-  uint* stack1 = stack + PGSIZE;
+  uint* stack_temp = stack + PGSIZE;
 
   // Allocate process.
   if((np = allocproc()) == 0){
@@ -567,9 +569,9 @@ clone(void(*func)(void*),void* arg, void* stack)
 
 
 
-	*(stack1 - 1) = (uint) arg;
-	*(stack1 - 2) = 0xffffffff;
-  np->tf->esp = (uint)(stack1 - 2);
+	*(stack_temp - 1) = (uint) arg;
+	*(stack_temp - 2) = 0xffffffff;
+  np->tf->esp = (uint)(stack_temp - 2);
 
   np->tf->ebp = np->tf->esp;
   np->tf->eip = (uint)func;

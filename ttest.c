@@ -5,34 +5,24 @@
 #include "x86.h"
 
 
+int arrsum = 0;
+int arr[] = {1, 2, 3, 4, 5, 6}; // 1 + 2 + 3 + 4 + 5 + 6 = 21
 
-int x =0;
-
-void tfunc(void* arg){
-  int a = *(int*)arg;
-  x = x+a;
-  printf(3, "x is at %d in thread n \n", x);
-  return;
+void sum(void *x){
+    arrsum += *((int *)x);
+    //printf(1,"\n i am a thread \n");
 }
 
+int main(){
+    for(int i = 0; i < 6; i++){
+        thread_create(&sum,(void *)&arr[i]);
+        //
+        //printf(1,"the %d result is arrsum= %d\n", i,arrsum);
+    }
+    for(int i = 0; i < 6; i++){
+        thread_join();
+    }
+    printf(1,"the final result is arrsum= %d\n", arrsum);
 
-
-int main(int argc, char *argv[]) {
-	void *stack;
-	
-	stack = (void*)malloc(4096);
-	
-  
-  int arg = 3;
-  printf(1, "x is at in main process before thread clone %d\n", x);
-  int tid = clone(&tfunc, &arg,stack);
-  printf(1, "tid is at %p\n", tid);
-  sleep(20);
-  printf(1, "x is at in main process %d\n", x);
-
-
-
-
-  exit();
+    exit(); 
 }
-

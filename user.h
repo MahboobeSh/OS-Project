@@ -41,3 +41,6 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+int thread_create(void(*func)(void*), void* arg);
+int thread_join(void);
