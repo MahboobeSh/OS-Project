@@ -551,6 +551,9 @@ clone(void(*func)(void*),void* arg, void* stack)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
+  if((uint)stack % PGSIZE !=0){
+		stack = stack + PGSIZE - ((uint)stack % PGSIZE);
+	}
   uint* stack_temp = stack + PGSIZE;
 
   // Allocate process.
