@@ -534,7 +534,7 @@ procdump(void)
 }
 
 int
-clone((void)(*func),void* arg, void* stack)
+clone((void)(*func)(void*),void* arg, void* stack)
 {
   int i, pid;
   struct proc *np;
