@@ -102,12 +102,12 @@ sys_helloWorld(void){
 
 int
 sys_clone(void){
-  void *func(void*);
+  void (*func)(void*);
   void *arg;
   void *stack;
-  if(argptr(0, (char**)&func, sizeof(*funcptr)) < 0)
+  if(argptr(0, (char**)&func, sizeof(*func)) < 0)
      return -1;
-  if(argptr(1, (char**)&arg, sizeof(*stack_arg)) < 0)
+  if(argptr(1, (char**)&arg, sizeof(*arg)) < 0)
      return -1;
   if(argptr(2, (char**)&stack, PGSIZE) < 0)
      return -1; 
@@ -121,5 +121,5 @@ sys_join(void){
   void **temp_stack;
   if(argptr(0, (char **)&temp_stack, sizeof(temp_stack)) < 0)
      return -1;
-  return join()
+  return join(temp_stack);
 }
